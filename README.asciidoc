@@ -1,9 +1,7 @@
+link:https://github.com/joofio/py4chemoinformatics[English version of Python for Chemoinformatics] link:https://github.com/joofio/py4chemoinformatics/blob/master/pdf/py4chemoinformatics.pdf[(pdf)]
+
 = 目次
 :imagesdir: images
-
-ちょっと追加した(2018.12.12)。web interfaceは入門の範囲を超えそうなのでどうするかは考える。
-
-- https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#formatted-text[AsciiDoc Syntax Quick Reference]
 
 image::souyakuchan.png[py4chemoinformatics, width=150]
 
@@ -63,6 +61,9 @@ image::souyakuchan.png[py4chemoinformatics, width=150]
 - Chemical Spaceとは
 - ユークリッド距離を用いたマッピング
 - tSNEをつかったマッピング
+- 化合物の距離情報に基づいたクラスタリング(HDBSCANを使ってみる)
+- 予め定義したケミカルスペースに新しいデータを足したい
+
 
 == link:ch09_qsar.asciidoc[09 構造活性相関（QSAR）の基礎]
 
@@ -91,3 +92,11 @@ image::souyakuchan.png[py4chemoinformatics, width=150]
 
 - さらに学ぶために
 
+== License
+
+This document is copyright (C) 2019 by @fmkz___ and @iwatobipen
+
+This document is link:https://github.com/Mishima-syk/py4chemoinformatics/blob/master/LICENSE[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+Public License].
+
+image::by-nc-sa.png[CC-BY-NC-SA, width=100]

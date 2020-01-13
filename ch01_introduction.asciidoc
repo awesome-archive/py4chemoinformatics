@@ -26,9 +26,9 @@ RDKitのRDはなんなのか？実は**Rational Discovery**の略称であり現
 
 おっと話が横道に逸れてしまった。本題に戻ろう。
 
-開発者のGreg Landorum氏いわく
+開発者のGreg Landrum氏いわく
 
-[quote, Greg Landorum]
+[quote, Greg Landrum]
 RDKitはケモインフォマティクスにおけるSwiss Army Knifeであり、様々な機能ピースの集合体である
 
 これはまさに的を得た表現でござる。link:https://www.rdkit.org/docs/[公式ドキュメント]を見ればわかるでござろうが、既に色々な機能が用意されておるのだ。
@@ -93,6 +93,7 @@ link:https://twitter.com/ReLuTropy[@ReLuTropy],
 link:https://twitter.com/ski_nanko[@ski_nanko],
 link:https://twitter.com/torusengoku[@torusengoku],
 link:https://twitter.com/yamasaKit_[@yamasaKit_]
+link:https://github.com/keisuke-yanagisawa[keisuke-yanagisawa]
 
 
 ここから先は(Nujabes - reflection eternalを聴きながら書きました　by @fmkz___ 2019/03/03)

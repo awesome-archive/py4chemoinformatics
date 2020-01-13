@@ -1,6 +1,6 @@
 = AI創薬のための ケモインフォマティクス入門
 @fmkz___, @iwatobipen
-v0.90(Draft) 2019/03/28
+v1.101 2019/12/31
 :toc:
 :toc-title: 目次
 :lang: ja
@@ -39,9 +39,9 @@ RDKitのRDはなんなのか？実は**Rational Discovery**の略称であり現
 
 おっと話が横道に逸れてしまった。本題に戻ろう。
 
-開発者のGreg Landorum氏いわく
+開発者のGreg Landrum氏いわく
 
-[quote, Greg Landorum]
+[quote, Greg Landrum]
 RDKitはケモインフォマティクスにおけるSwiss Army Knifeであり、様々な機能ピースの集合体である
 
 これはまさに的を得た表現でござる。link:https://www.rdkit.org/docs/[公式ドキュメント]を見ればわかるでござろうが、既に色々な機能が用意されておるのだ。
@@ -106,6 +106,7 @@ link:https://twitter.com/ReLuTropy[@ReLuTropy],
 link:https://twitter.com/ski_nanko[@ski_nanko],
 link:https://twitter.com/torusengoku[@torusengoku],
 link:https://twitter.com/yamasaKit_[@yamasaKit_]
+link:https://github.com/keisuke-yanagisawa[keisuke-yanagisawa]
 
 
 ここから先は(Nujabes - reflection eternalを聴きながら書きました　by @fmkz___ 2019/03/03)
@@ -149,7 +150,7 @@ Anacondaは機械学習を行うための準備を楽にするためのパッケ
   プログラミング言語Pythonは比較的多くの標準ライブラリが用意されていますが、ケモインフォマティクス用のライブラリは自分でインストールする必要があります。この作業は慣れれば大した問題ではないですが、初学者にとっては面倒くさいでしょう。この手間を軽減するのが理由です。
 
 Pythonには大きく2.x系のバージョンと3.x系のバージョンとがありますが？::
-  link:https://pythonclock.org/[2.x系はサポートが2020年に終了する]ため、新しく学ぶ方は2.x系を使う必要はありません。
+  link:https://pythonclock.org/[2.x系のサポートは2020年1月1日をもって終了する]ため、新しく学ぶ方は2.x系を使う必要はありません。
 
 === Anacondaのインストール方法
 
@@ -159,7 +160,7 @@ image::ch02/anaconda01.png[APX+RVX, width=600, pdfwidth=60%]
 
 [source, bash]
 ----
-$ bash ~/Downloads/Anaconda3-4.1.0-Linux-x86_64.sh #インストーラー名は適宜変更してください
+$ bash ~/Downloads/Anaconda3-2019.03-MacOSX-x86_64.sh #インストーラー名は適宜変更してください
 ----
 
 Enterを押します
@@ -220,12 +221,12 @@ Anacondaのインストールが完了すると、コマンドプロンプトま
 
 === 仮想環境の構築とパッケージのインストール
 
-AnacondaでインストールされるPythonは3.7ですが、本書執筆時点で配布されている最新のRDKitはPython3.6を必要とします。そのためcondaで仮想環境を構築し、必要なバージョンのPythonをインストールします。コマンドの-nの後ろは"py4chemoinformatics"としていますが皆さんの好きな名前でも構いません。
+コマンドの-nの後ろは"py4chemoinformatics"としていますが皆さんの好きな名前でも構いません。
 仮想環境構築後、本章以降で利用するパッケージをインストールします。
 
 [source, bash]
 ----
-$ conda create -n py4chemoinformatics python3.6
+$ conda create -n py4chemoinformatics
 $ source activate py4chemoinformatics # Mac/Linux
 $ activate py4chemoinformatics # Windows
 
@@ -234,6 +235,13 @@ $ conda install -c conda-forge rdkit
 $ conda install -c conda-forge seaborn
 $ conda install -c conda-forge ggplot
 $ conda install -c conda-forge git
+----
+
+もし仮想環境でjupyter notebookが動かない場合はもう一度インストールする必要があります。
+
+[source, bash]
+----
+$ conda install notebook ipykernel
 ----
 
 === インストールしたパッケージの説明
@@ -274,9 +282,9 @@ $ conda install <package name>　# install package
 $ conda create -n 仮想環境の名前 python=バージョン　# 仮想環境の作成。
 $ conda info -e # 作った仮想環境一覧の表示
 $ conda remove -n 仮想環境の名前 # 仮想環境の削除
-$ source activate 仮想環境の名前 # 仮想環境を使う(mac/linux)
+$ conda activate 仮想環境の名前 # 仮想環境を使う(mac/linux)
 $ activate 仮想環境の名前 # 仮想環境を使う(Windows)
-$ source deactivate # 仮想環境から出る
+$ conda deactivate # 仮想環境から出る(source deactivateは廃止されました)
 $ conda list # 今使っている仮想環境にインストールされているライブラリの一覧を表示
 ----
 
@@ -510,16 +518,16 @@ NOTE: 文字列で表現できるということは、文字列生成アルゴ�
 
 === 複数の化合物を一度に取り扱うには？
 
-複数の化合物を一つのファイルに格納する方法にはいくつかありますが、sdfというファイル形式を利用するのが一般的です。
+複数の化合物を一つのファイルに格納する方法にはいくつかありますが、sdというファイル形式を利用するのが一般的です。sdファイルということで、ファイルの拡張子は.sdfとなることが多いです。
 
-.sdfフォーマットとは？
+.sdfとは？
 ****
-MDL社で開発された分子表現のためのフォーマットにMOL形式というものがあります。このMOL形式を拡張したものがSDF形式です。具体的にはMOL形式で表現されたものを"$$$$"という行で区切ることにより、複数の分子を取り扱えるようにしてあります。
+MDL社で開発された分子表現のためのフォーマットにlink:https://en.wikipedia.org/wiki/Chemical_table_file[MOL形式]というものがあります。このMOL形式を拡張したものがSDファイルです。具体的にはMOL形式で表現されたものを\$$$$という行で区切ることにより、複数の分子を取り扱えるようにしてあります。
 
 MOL形式は分子の三次元座標を格納することができ二次元だけでなく立体構造を表現できる点はSMILESとの大きな違いです。
 ****
 
-==== sdfファイルをChEMBLからダウンロードする
+==== sdファイルをChEMBLからダウンロードする
 
 4章を参考にlink:https://www.ebi.ac.uk/chembl/beta/[ChEMBL]のトポイソメラーゼII阻害試験(CHEMBL669726)の構造データをsdfファイル形式でダウンロードします。
 
@@ -609,12 +617,19 @@ TemplateAlign.AlignMolToTemplate2D(vardenafil, MCS)
 Draw.MolsToGridImage([sildenafil, vardenafil], legends=['sildenafil', 'vardenafil'])
 ----
 
-ヘテロシャッフルした分子を生成するためにHeteroShuffleというクラスを定義します。オブジェクトの生成にはシャッフルしたい分子と変換したい部分構造（Core）を与えます。クラス内のコードではまず、分子をCoreで切断し、Coreとそれ以外に分けます。CoreのAromatic原子で、置換基がついてない原子のみが置換候補になります。。シャッフル後のCoreとCore以外のパーツを再結合するための反応オブジェクトを生成するメソッドがmake_connectorです。このメソッドで作られた反応オブジェクトを利用してre_construct_molで分子を再構築しています。
+ヘテロシャッフルした分子を生成するためにHeteroShuffleというクラスを定義します。オブジェクトの生成にはシャッフルしたい分子と変換したい部分構造（Core）を与えます。クラス内のコードではまず、分子をCoreで切断し、Coreとそれ以外に分けます。CoreのAromatic原子で、置換基がついてない原子のみが置換候補になります。シャッフル後のCoreとCore以外のパーツを再結合するための反応オブジェクトを生成するメソッドがmake_connectorです。このメソッドで作られた反応オブジェクトを利用してre_construct_molで分子を再構築しています。
 
 考えられる原子の組み合わせを構築するために、itertools.productに、候補原子（C, S, N, O）の原子番号と、環を構成する原子数target_atomic_numsを与えます。その後に分子として生成できないものは排除するのでここでは考えられる全部の組み合わせを出します。
 
 [source, python]
 ----
+import copy
+import itertools
+
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
+
 class HeteroShuffle():
     
     def __init__(self, mol, query):
@@ -623,7 +638,6 @@ class HeteroShuffle():
         self.subs = Chem.ReplaceCore(self.mol, self.query)
         self.core = Chem.ReplaceSidechains(self.mol, self.query)
         self.target_atomic_nums = [6, 7, 8, 16]
-    
     
     def make_connectors(self):
         n = len(Chem.MolToSmiles(self.subs).split('.'))
@@ -658,7 +672,7 @@ class HeteroShuffle():
         atoms = []
         for atom in self.core.GetAromaticAtoms():
             neighbors = [a.GetSymbol() for a in atom.GetNeighbors()]
-            if '*' not in neighbors and atom.GetSymbol() !='*':
+            if '*' not in neighbors and atom.GetSymbol() != '*':
                 atoms.append(atom)
         print(len(atoms))
         return atoms
@@ -671,20 +685,17 @@ class HeteroShuffle():
         self.make_connectors()
         for combination in combinations:
             target = copy.deepcopy(self.core)
-            #print(Chem.MolToSmiles(target))
             for i, idx in enumerate(idxs):
                 target.GetAtomWithIdx(idx).SetAtomicNum(combination[i])
             smi = Chem.MolToSmiles(target)
-            #smi = smi.replace('sH','s').replace('oH','o').replace('cH3','c')
-            #print('rep '+smi)
             target = Chem.MolFromSmiles(smi)
-            if target != None:
+            if target is not None:
                 n_attachment = len([atom for atom in target.GetAtoms() if atom.GetAtomicNum() == 0])
                 n_aromatic_atoms = len(list(target.GetAromaticAtoms()))
                 if target.GetNumAtoms() - n_attachment == n_aromatic_atoms:
                     try:
                         mol = self.re_construct_mol(target)  
-                        if checkmol(mol):
+                        if check_mol(mol):
                             smiles_set.add(Chem.MolToSmiles(mol))
                     except:
                         pass
@@ -692,14 +703,14 @@ class HeteroShuffle():
         return mols
 ----
 
-上のコードで使われているcheckmolという関数はc1coooo1のような６員環の構造もAromaticだと判定されてしまうのでそれを避けるために使っています。O, Sが許容されるのは５員環のヘテロ芳香環のみにしました。
+上のコードで使われているcheck_molという関数はc1coooo1のような６員環の構造もAromaticだと判定されてしまうのでそれを避けるために使っています。O, Sが許容されるのは５員環のヘテロ芳香環のみにしました。
 
 [source, python]
 ----
-def checkmol(mol):
+def check_mol(mol):
     arom_atoms = mol.GetAromaticAtoms()
     symbols = [atom.GetSymbol() for atom in arom_atoms if not atom.IsInRingSize(5)]
-    if symbols == []:
+    if not symbols:
         return True
     elif 'O' in symbols or 'S' in symbols:
         return False
@@ -725,8 +736,8 @@ image::ch05/ch05_05.png[query]
 
 [source, python]
 ----
-ht=HeteroSuffle(mol1, core1)
-res=ht.generate_mols()
+ht = HeteroShuffle(mol1, core1)
+res = ht.generate_mols()
 print(len(res))
 Draw.MolsToGridImage(res, molsPerRow=5)
 ----
@@ -738,8 +749,8 @@ image::ch05/ch05_06.png[res1]
 
 [source, python]
 ----
-ht=HeteroSuffle(mol2, core2)
-res=ht.generate_mols()
+ht = HeteroShuffle(mol2, core2)
+res = ht.generate_mols()
 print(len(res))
 Draw.MolsToGridImage(res, molsPerRow=5)
 ----
@@ -767,7 +778,7 @@ image:jupyter.png[link="https://github.com/Mishima-syk/py4chemoinformatics/blob/
 
 === 化合物が似ているとはどういうことか？
 
-２つの化合物が似ているとはどういうことでしょうか？なんとなく形が似ている？という表現は科学的ではありません。ケモインフォマティクスでは類似度(一般的に0-100の値を取ります)や非類似度(距離)といった定量的な尺度により似ているかどうかを評価します。
+２つの化合物が似ているとはどういうことでしょうか？なんとなく形が似ている？という表現は科学的ではありません。ケモインフォマティクスでは類似度(一般的に0-100%値を取ります)や非類似度(距離)といった定量的な尺度により似ているかどうかを評価します。
 
 ここでは主に２つの代表的な尺度を紹介します。
 
@@ -835,22 +846,33 @@ DataStructs.TanimotoSimilarity(fp1, fp2)
 # 0.5384615384615384
 ----
 
+類似度の補数(すなわち1 - 類似度)である距離を求めたい場合はreturnDistance=Trueとします。
+後述のクラスタリングなどでは類似度よりも距離を用いることの方が多いです。
+
+[source, python]
+----
+DataStructs.TanimotoSimilarity(fp1, fp2, returnDistance=True)
+# 0.46153846153846156
+----
+
 === バーチャルスクリーニング
 
 ここまでで化合物の類似性の評価方法について説明しました。この類似性の指標を用い多くの化合物の中から特定の化合物群を選び出すことをバーチャルスクリーニングと呼びます。
 
 例えば薬になりそうな化合物が特許や論文で発表されたり、自社のアッセイ系で有望そうな化合物が見つかった場合、自社の化合物ライブラリデータベースや市販化合物のデータベースの中に類似の化合物で、より有望そうなものがあるかどうかを探したいことがあります。ここではノイラミニダーゼ阻害薬として知られるインフルエンザ治療薬であるlink:https://www.ebi.ac.uk/chembl/beta/compound_report_card/CHEMBL466246/[イナビル]の類似体が購入可能であるかをlink:http://zinc15.docking.org/[ZINC]を利用して調べます。
 
-イナビルの分子量が約350,ALogPが-2.92だったので、ZINCの分子量350-375,LogP=-1の340万化合物の区画を選択しました。この区画は16のファイルに分かれていますが、最初の1セットだけダウンロードして使ってみます。
+イナビルの分子量が約350,ALogPが-2.92だったので、ZINCの分子量350-375,LogPが-1未満の340万化合物の区画を選択しました。この区画は16のファイルに分かれていますが、最初の1セットだけダウンロードして使ってみます。
 
 NOTE: データのダウンロード方法は4章で説明しています。
 
-jupyter notebookでは!で始めるとShellコマンドを実行できます。以下はjupyter notebook上でwgetコマンドでZINCのデータセットをダウンロードする例です
+jupyter notebookでは!で始めるとShellコマンドを実行できます。以下はjupyter notebook上でwgetコマンドでZINCのデータセットをダウンロードする例です。
 
 [source, python]
 ----
 !wget http://files.docking.org/2D/EA/EAED.smi
 ----
+
+NOTE:: もし、Windowsなどでwgetコマンドがない場合はブラウザにURLを直接入力するとファイルのダウンロードができるので、ダウンロードしたファイルをjupyterを起動しているディレクトリに移動してください。
 
 SmilesMolSupplier関数を使い、ファイルからまとめてSMILESを読み込みmolオブジェクトにします。5章で紹介したSDMolSupplierのSMILESバージョンと考えてください。
 
@@ -861,7 +883,7 @@ len(spl)
 # 195493
 ----
 
-続いてイナビル(LANIMAMIBIR)との類似度を調べるための関数を用意します。
+続いてイナビル(Laninamivir)との類似度を調べるための関数を用意します。
 
 [source, python]
 ----
@@ -906,7 +928,7 @@ image::ch06/vs01.png[result]
 
 === クラスタリング
 
-例えば市販化合物を購入してライブラリを作る場合にはできるだけ多様性をもたせたいので、似ている化合物ばかりが偏らないように類似化合物どうしをまとめ、その中の代表を選びます。このように化合物を構造の類似性でまとめたい場合、クラスタリングという手法を使います。
+例えば市販化合物を購入してライブラリを作る場合にはできるだけ多様性をもたせたいので、似ている化合物ばかりが偏らないように類似化合物同士をまとめ、その中の代表を選びます。このように化合物を構造の類似性でまとめたい場合、クラスタリングという手法を使います。
 
 link:https://www.ebi.ac.uk/chembl/beta/assay_report_card/CHEMBL1040694/[Novrtisの抗マラリアアッセイ]の5614件のヒット化合物をクラスタリングします。
 
@@ -932,14 +954,15 @@ for mol in mols:
         valid_mols.append(mol)
 ----
 
-フィンガープリントから距離行列(下三角の距離行列)を生成します。
+フィンガープリントから距離行列(下三角の距離行列)を生成します。ある化合物を参照化合物とし、複数の化合物の間の類似度や距離を計算する時はDataStructs.BulkTanimotoSimilarityを用いるとまとめて計算ができます。
 
 [source, python]
 ----
 distance_matrix = []
 for i, fp in enumerate(fps):
-    similarities = DataStructs.BulkTanimotoSimilarity(fps[i], fps[:i+1])
-    distance_matrix.extend([1-sim for sim in similarities])
+    distance = DataStructs.BulkTanimotoSimilarity(fps[i], fps[:i+1],
+                                                  returnDistance=True)
+    distance_matrix.extend(distance)
 ----
 
 距離行列を用いて化合物をクラスタリングします。3番目の引数は距離の閾値です。この例では距離0.2つまり80%以上の類似度の化合物でクラスタリングしています。
@@ -994,7 +1017,7 @@ apx_fp = AllChem.GetMorganFingerprint(apx, 2)
 rvx_fp = AllChem.GetMorganFingerprint(rvx, 2)
 
 DataStructs.TanimotoSimilarity(apx_fp, rvx_fp)
-# 0.40625
+# 0.32353
 ----
 
 40%くらいの類似度ということになりました。実はlink:https://www.rcsb.org/structure/2P16[apixaban]もlink:https://www.rcsb.org/structure/2W26[rivaroxaban]も複合体結晶構造が解かれており、link:https://pymol.org/2/[PyMOL]を利用して重ねて描画しました。
@@ -1128,10 +1151,10 @@ python rfrag.py <MMPAを実施したいFileの名前 >フラグメント化し�
 
 python indexing.py <先のコマンドでできたフラグメントのファイル >MMP_アウトプットファイル.CSV
 # 例えば
-# python index.py <data/sample_fragmented.txt >data/mmp.csv
+# python indexing.py <data/sample_fragmented.txt >data/mmp.csv
 ----
 
-以上のコマンドを実行すると分子A, 分子B, 分子AのID, 分子BのID, 変換された構造のSMIRKS, 共通部分構造（context）ががcsvファイルが生成されます。このデータに基づき活性や物性などを紐つけることでMMPAが行えます。
+以上のコマンドを実行すると分子A, 分子B, 分子AのID, 分子BのID, 変換された構造のSMIRKS, 共通部分構造（context）のcsvファイルが生成されます。このデータに基づき活性や物性などを紐つけることでMMPAが行えます。
 
 NOTE: link:http://www.daylight.com/dayhtml/doc/theory/theory.smirks.html[SMIRKS]は分子の変換をSMILESのように文字列表記によって表現する手法です。 
 
@@ -1162,10 +1185,10 @@ sys.path.append(mmpapath)
 df = pd.read_csv('Chembl_FXa.txt', sep='\t')
 remover = SaltRemover.SaltRemover()
 mols = []
-for i, smi in enumerate(df.CANONICAL_SMILES):
+for smi, chembl_id in zip(df.CANONICAL_SMILES, df.CMPD_CHEMBLID):
     try:
         mol = Chem.MolFromSmiles(smi)
-        mol.SetProp('CMPD_CHEMBLID', df.CMPD_CHEMBLID[i])
+        mol.SetProp('CMPD_CHEMBLID', chembl_id)
         mol = remover.StripMol(mol)
         mols.append(mol)
     except:
@@ -1174,18 +1197,22 @@ for i, smi in enumerate(df.CANONICAL_SMILES):
 
 続いてRDKit contribに登録されているmmpaのrfragをインポートして、分子をフラグメントに分割します。
 以下のコードで用いているrfrag.fragment_molで呼ばれている関数の実態はlink:http://rdkit.org/docs/source/rdkit.Chem.rdMMPA.html[rdMMPA.FragmentMol]です。この関数は、与えたMolオブジェクトを回転可能ボンドにて切断したフラグメントを生成します。
-出力の形式はfragment(SMILES, COMPOUND_ID)とした場合、**SMILES, COMPOUND_ID, CORE, CHAINS** というカンマ区切りのテキストのリストになります。COREというのは例えばA-B-Cという分子（ーが回転可能ボンドを意味します）を考えると、切断の仕方がA/B-C, A/B/C, A-B/Cという三つのケースがあります。二番目のケースの時にBがCoreにA, CがCHAINSになります。一番目と、三番目はどちらも（A,B-C）、（A-B,C）というフラグメントはCHAINSにアサインされ、COREはNONEになります。
+出力の形式はfragment(SMILES, COMPOUND_ID)とした場合、**SMILES, COMPOUND_ID, CORE, CHAINS** というカンマ区切りのテキストのリストになります。COREというのは例えばA-B-Cという分子（ーが回転可能ボンドを意味します）を考えると、切断の仕方がA/B-C, A/B/C, A-B/Cという三つのケースがあります。二番目のケースの時にBがCoreにA, CがCHAINSになります。一番目と、三番目はどちらも (A,B-C), (A-B,C) というフラグメントはCHAINSにアサインされ、COREはNONEになります。
 
 [source, python]
 ----
 import rfrag
+remover = SaltRemover.SaltRemover()
 rfragdata = []
-for i, smi in enumerate(df.CANONICAL_SMILES):
+for smi, chembl_id in zip(df.CANONICAL_SMILES, df.CMPD_CHEMBLID):
     try:
-        out = rfrag.fragment_mol(smi, df.CMPD_CHEMBLID[i])
+        mol = Chem.MolFromSmiles(smi)
+        mol = remover.StripMol(mol)
+        smi = Chem.MolToSmiles(mol)
+        out = rfrag.fragment_mol(smi, chembl_id)
         rfragdata.append(out)
     except:
-        print(smi, df.CMPD_CHEMBLID[i])
+        print(smi, chembl_id)
 ----
 
 MMSを作成する関数を定義します。コードはUGMの資料に記載されているものをほぼそのまま利用しますが、Jupyter上で全ての処理をおこなうため読み込み先をファイルからリストに変更しました。
@@ -1400,10 +1427,10 @@ import os
 [source, python]
 ----
 oxrs = [("CHEMBL3098111", "Merck" ),("CHEMBL3867477", "Merck" ),
-　　　　　("CHEMBL2380240", "Rottapharm" ),("CHEMBL3352684", "Merck" ),
-　　　　　("CHEMBL3769367", "Merck" ),("CHEMBL3526050", "Actelion" ),
-　　　　　("CHEMBL3112474", "Actelion" ),("CHEMBL3739366", "Heptares" ),
-　　　　　("CHEMBL3739395", "Actelion" ), ("CHEMBL3351489", "Eisai" )]
+        ("CHEMBL2380240", "Rottapharm" ),("CHEMBL3352684", "Merck" ),
+        ("CHEMBL3769367", "Merck" ),("CHEMBL3526050", "Actelion" ),
+        ("CHEMBL3112474", "Actelion" ),("CHEMBL3739366", "Heptares" ),
+        ("CHEMBL3739395", "Actelion" ), ("CHEMBL3351489", "Eisai" )]
 
 fps = []
 docs = []
@@ -1492,6 +1519,204 @@ g
 image::ch08/tsne01.png[PCA, size=500]
 
 今回紹介したPCA,tSNEの他にも色々な描画方法があるので調べてみるとよいでしょう。
+
+=== 化合物の距離情報に基づいたクラスタリング(HDBSCAN)
+
+今回取り上げた事例では、化合物のフィンガープリントをPCAやtSNEを用いて次元圧縮した結果に企業名を載せると綺麗にマッピングができました。ですが、毎回情報があるとは限りません。このような場合、クラスタリングを行い化合物を適当なグループに分割します。
+
+クラスタリングには、ｋ近傍法や、階層別クラスタリングなどがありますが、これらはどれくらいのサイズのクラスタに分けるべきかを自動的に決定することはできません。今回は、付与するクラスタラベルがほぼ企業名に対応するというように、いい感じに分割したいので密度に基づくクラスタリング手法であるlink:https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14[HDBSCAN]を利用します
+
+インストールはcondaまたは、pipコマンドでインストールできます。可視化にはlink:https://seaborn.pydata.org/[seaborn]を使いました。データの読み込みは上のパートと同じなので省略しますが、コード実行時にWarningが出るのを避けるため、RDLogger.DisableLog('rdApp.*')を入れました(jupyter notebook参照)。
+
+[source, python]
+----
+pip install hdbscan
+#or
+conda install -c conda-forge hdbscan
+conda install -c conda-forge seaborn
+----
+
+インストールが終わったら早速使ってみます。
+
+[source, python]
+----
+%matplotlib inline
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from rdkit import Chem, DataStructs
+from rdkit.Chem import AllChem, Draw
+from rdkit import RDLogger
+from sklearn.manifold import TSNE
+from hdbscan import HDBSCAN
+## 以下のパッケージは後半で利用します
+from sklearn.model_selection import train_test_split
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.ensemble import RandomForestRegressor
+from mlinsights.mlmodel import PredictableTSNE
+
+sns.set_context('poster')
+sns.set_style('white')
+sns.set_color_codes()
+plot_kwds = {'alpha' : 0.5, 's' : 80, 'linewidths':0}
+RDLogger.DisableLog('rdApp.*')
+seed = 794
+
+oxrs = [("CHEMBL3098111", "Merck" ),  ("CHEMBL3867477", "Merck" ),  ("CHEMBL2380240", "Rottapharm" ),
+             ("CHEMBL3352684", "Merck" ),  ("CHEMBL3769367", "Merck" ),  ("CHEMBL3526050", "Actelion" ),
+             ("CHEMBL3112474", "Actelion" ),  ("CHEMBL3739366", "Heptares" ),  ("CHEMBL3739395", "Actelion" ), 
+             ("CHEMBL3351489", "Eisai" )]
+fps = []
+docs = []
+companies = []
+mol_list = []
+for cid, company in oxrs:
+    sdf_file = os.path.join("ch08", cid + ".sdf")
+    mols = Chem.SDMolSupplier(sdf_file)
+    for mol in mols:
+        if mol is not None:
+            mol_list.append(mol)
+            fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2)
+            arr = np.zeros((1,))
+            DataStructs.ConvertToNumpyArray(fp, arr)
+            docs.append(cid)
+            companies.append(company)
+            fps.append(arr)
+fps = np.array(fps)
+companies = np.array(companies)
+docs = np.array(docs)
+
+trainIDX, testIDX = train_test_split(range(len(fps)), random_state=seed)
+----
+
+まずtSNEで企業のラベルとともにケミカルスペースを眺めましょう。
+
+[source, python]
+----
+tsne = TSNE(random_state=seed)
+res = tsne.fit_transform(fps)
+plt.clf()
+plt.figure(figsize=(12, 6))
+sns.scatterplot(res[:,0], res[:,1], hue=companies, **plot_kwds)
+----
+
+image::ch08/tsne02.png[TSNE2, size=500]
+
+きれいに分かれているのが確認できたので、次はHDBSCANを実行し、その結果を可視化してみます。
+
+HDBSCANのメソッドはScikit-learnに準拠しているので、Scikit-learn同様にオブジェクトを作成し、fitを呼び出すだけで完了ですが、クラスタリング実施の際に、各データの特徴量に基づく距離を指定する必要があります。HDBSCANにはデフォルトでユークリッド距離、コサイン距離など多くのメトリクスが用意されています。
+
+今回は化合物の距離なのでタニモト距離を使いますが、これは自分で実装する必要があります(tanimoto_dist)。このようにユーザー定義関数を利用する場合は、metric='pyfunc'として、func引数に定義した関数を渡します。
+
+[source, python]
+----
+def tanimoto_dist(ar1, ar2):
+    a = np.dot(ar1, ar2)
+    b = ar1 + ar2 - ar1*ar2
+    return 1 - a/np.sum(b)
+
+clusterer = HDBSCAN(algorithm='best', min_samples=5, metric='pyfunc', func=tanimoto_dist)
+clusterer.fit(fps)
+----
+
+計算が終わると、clustererオブジェクトのlabels_というプロパティにラベルが付与されるので、それを使ってプロットしてみましょう。今回はmin_sample=5とし、クラスタを形成時に最低限含まれるべき化合物数を5としました。このパラメータを増減すると、異なる出力が得られますので、ある程度試行錯誤してみるのも良いでしょう。
+
+プロットで灰色になっている部分は、どのクラスタにも属さないと判断されたものです。
+
+[source, python]
+----
+plt.clf()
+plt.figure(figsize=(12, 6))
+palette = sns.color_palette()
+cluster_colors = [sns.desaturate(palette[col], sat)
+                 if col >= 0 else (0.5, 0.5, 0.5) for col, sat in zip(clusterer.labels_, clusterer.probabilities_)]
+plt.scatter(res[:,0], res[:,1], c=cluster_colors, **plot_kwds)
+----
+
+image::ch08/tsne03.png[TSNE3, size=500]
+
+おおよそtSNEで分離されているクラスタとラベルが対応しているのが確認できます。このようにクラスタ数を予め決めずに、密度に基づいてクラスタを分割する手法としてHDBSCANは便利です。
+
+=== 予め定義したケミカルスペースに新しいデータを追加する
+
+さて、ここまでで化合物の特徴を元にそれを低次元のケミカルスペースにマッピングする手法を学びました。
+
+PCAやtSNEを使ってマップしたときに、次に作る化合物はこの空間のどこに位置するのだろうか？と考えることは多いです。また、HTSライブラリの拡張など際に、今までにないケミカルスペースを埋めたい場合も既存のケミカルスペースとの比較がしたくなります。
+
+Scikit-learnのPCAには、transform()メソッドがあり、作成した主成分空間に新しい化合物をマッピングできます。一方でtSNEはfit_transform()メソッドはありますが、transform()メソッドはありません。したがって、新しい化合物をマップしたい場合、全化合物で計算する必要があります。手法によらず、新しいデータを既存のケミカルスペースへマッピングする方法はないのものでしょうか。予測モデルの作成と同じ要領で、ケミカルスペースの予測モデルがあればいいのではないでしょうか。
+つまり、トレーニングデータを使い特徴量＝＞低次元空間への次元圧縮の予測モデルを作ります。こうすることで、既存のケミカルスペースに新しい化合物をマッピングできるようになります。これを実装してるパッケージがlink:http://www.xavierdupre.fr/app/mlinsights/helpsphinx/index.html[mlinsights]です。このパッケージはpipコマンドでインストールできます。
+
+[source, python]
+----
+pip install mlinsights
+----
+
+mlinsightsは複数の手法を実装していますが今回は、PredictableTSNEのみの事例紹介に絞ります。
+ランダムにトレーニングとテストデータに分割しトレーニングデータでTSNEを実施、その結果をRandomForestとGausianProcessRegressorの2つの手法で学習、このモデルを用いてテストデータをマッピングするというテストをします。
+
+[source, python]
+----
+trainFP = [fps[i] for i in trainIDX]
+train_mol = [mol_list[i] for i in trainIDX]
+
+testFP = [fps[i] for i in testIDX]
+test_mol = [mol_list[i] for i in testIDX]
+allFP = trainFP + testFP
+tsne_ref = TSNE(random_state=seed)
+res = tsne_ref.fit_transform(allFP)
+plt.clf()
+plt.figure(figsize=(12, 6))
+sns.scatterplot(res[:,0], res[:,1], hue=['train' for i in range(len(trainFP))] + ['test' for i in range(len(testFP))])
+----
+
+ランダムスプリットなので、まんべんなくサンプリングできています。
+
+image::ch08/ptsne01.png[pTSNE1, size=500]
+
+PredictableTSNEもscikit-learnと同じなので、オブジェクトを作ってfitで学習、Transformデータの次元削減をします。transformerにはTSNEやPCA次元圧縮用のオブジェクトを、Estimatorにはその結果を元にモデルを作る学習機を渡します。後でトレーニングデータとテストデータを重ねるのでkeep_tsne_outputs=Trueとしています。
+
+一点注意としてfitを呼び出すときに本来不要なyに対応する値を渡す必要があります。下のコードではダミーの値としてただのIndexを与えています。
+
+[source, python]
+----
+rfr = RandomForestRegressor(random_state=seed)
+tsne1 = TSNE(random_state=seed)
+pred_tsne_rfr = PredictableTSNE(transformer=tsne1, estimator=rfr, keep_tsne_outputs=True)
+pred_tsne_rfr.fit(trainFP, list(range(len(trainFP))))
+
+pred1 = pred_tsne_rfr.transform(testFP)
+plt.clf()
+plt.figure(figsize=(12, 6))
+plt.scatter(pred_tsne_rfr.tsne_outputs_[:,0], pred_tsne_rfr.tsne_outputs_[:,1], c='blue', alpha=0.5)
+plt.scatter(pred1[:,0], pred1[:,1], c='red', alpha=0.5)
+----
+
+image::ch08/ptsne02.png[pTSNE2, size=500]
+
+赤いポイントがテストデータで意外といい感じです。
+次はGaussianProcessで同じことをやってみます。
+
+[source, python]
+----
+gbr = GaussianProcessRegressor(random_state=seed)
+tsne2 = TSNE(random_state=seed)
+pred_tsne_gbr = PredictableTSNE(transformer=tsne2, estimator=gbr, keep_tsne_outputs=True)
+pred_tsne_gbr.fit(trainFP, list(range(len(trainFP))))
+pred2 = pred_tsne_gbr.transform(testFP)
+plt.clf()
+plt.figure(figsize=(12, 6))
+plt.scatter(pred_tsne_gbr.tsne_outputs_[:,0], pred_tsne_gbr.tsne_outputs_[:,1], c='blue', alpha=0.5)
+plt.scatter(pred2[:,0], pred2[:,1], c='red', alpha=0.5)
+----
+
+image::ch08/ptsne03.png[pTSNE3, size=500]
+
+GPモデルはあまり性能が出ませんでした。PredictableTSNEは新しい化合物の既存スペースへマッピングの一つのツールとなり得ますが、この例のようにモデルにより結果が大きく左右されることがあるようです。
+実プロジェクト投入時にはよく検証しないとメドケムの方をミスリードするリスクがあるかもしれませんが一つのアプローチとして紹介しました。
+
+
+TIP: 新しいバージョンのpandasを利用しているとggplotを呼ぶ際にエラーが起きることがあるかもしれません。link:https://github.com/yhat/ggpy/issues/662[github_issue]　解決策はこのリンクにあるようにインストールされたggplotのフォルダ内のコードggplot/utils.pyのpd.tslib.Timestampをpd.Timestampに、ggplot/stats/smoothers.pyのfrom pandas.lib import Timestamp を from pandas import Timestampに変えると動くと思います。
 
 <<<
 == 9章: 構造活性相関（QSAR）の基礎
@@ -1863,11 +2088,11 @@ from rdkit.Chem.Draw import IPythonConsole
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, f1_score
-from thensorflow.python.keras.layers import Iput
-from thensorflow.python.keras.layers import Dense
-from thensorflow.python.keras.layers import Dropout
-from thensorflow.python.keras.layers import Activation
-from thensorflow.python.keras.Model import Model
+from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Dropout
+from tensorflow.python.keras.layers import Activation
+from tensorflow.python.keras.model import Model
 
 
 ----
@@ -1922,7 +2147,7 @@ x_train1, x_test1, y_train1, y_test1 = train_test_split(fps, labels, random_stat
 
 Dropout層はランダムにニューロンを欠損させることにより過学習を防ぐ役割を果たします。
 
-Kerasではモデルを定義した後compile関数を呼ぶことでモデルを構築します。optimizer, lossは目的に応じて変更する必要がありますが、今回は'categorical_crossentropy'を使いましたがlink:https://keras.io/ja/optimizers/[optimzer]はadam以外にも多くあるのでどれが適切かは実際は試行錯誤が必要となるでしょう。
+Kerasではモデルを定義した後compile関数を呼ぶことでモデルを構築します。optimizer, lossは目的に応じて変更する必要があります。今回はlossとして'categorical_crossentropy', optimizerとして'adam'を使いましたがlink:https://keras.io/ja/optimizers/[optimzer]はadam以外にも多くあるのでどれが適切かは実際は試行錯誤が必要となるでしょう。
 
 TIP: link:https://en.wikipedia.org/wiki/Rectifier_(neural_networks)[ReLU]はlink:https://en.wikipedia.org/wiki/Sigmoid_function[Sigmoid]関数の勾配消失の課題を克服できるためよく利用されます。
 
@@ -1950,7 +2175,7 @@ NOTE: DNNは初期のランダムに発生させた重みに基づいて予測�
 ****
 トレーニングデータを用いてEpoch毎に正解の値と予測値の誤差を小さくするように重みを調整していきます。十分な量のトレーニングデータを用い学習したとしても繰り返しすぎると、同じトレーニングデータで何度も何度も学習することになるのでモデルの汎化性能が落ちてしまいます。
 
-過学習の判断にはEpoch毎、Training set/ Validation setの精度を評価しプロットするとTraining setの精度が向上する一方でValidation setの精度が変化しないまたは悪くなっているかどうかを調べればよいです。Kerasにはlink:https://keras.io/ja/callbacks/[Eary stopping]という機能があり、ある一定回数以上学習を進めてもモデルの性能が変化しなかったらそこで学習を打ち切るといったこともできます。
+過学習の判断にはEpoch毎、Training set/ Validation setの精度を評価しプロットするとTraining setの精度が向上する一方でValidation setの精度が変化しないまたは悪くなっているかどうかを調べればよいです。Kerasにはlink:https://keras.io/ja/callbacks/[Early stopping]という機能があり、ある一定回数以上学習を進めてもモデルの性能が変化しなかったらそこで学習を打ち切るといったこともできます。
 
 詳しくはlink:https://machinelearningmastery.com/early-stopping-to-avoid-overtraining-neural-network-models/[Early stoppingの紹介と参考文献]をご覧ください。
 ****
@@ -2088,7 +2313,7 @@ python example.py
 - link:https://github.com/GUR9000/KerasNeuralFingerprint[for keras1.x]
 - link:https://github.com/ericmjl/graph-fingerprint[ericmjl/graph_fp]
 - link:https://github.com/deepchem/deepchem[DeepChem]
-- link:https://machinelearningmastery.com/early-stopping-to-avoid-overtraining-neural-network-models/[Eary stoppingに関して]
+- link:https://machinelearningmastery.com/early-stopping-to-avoid-overtraining-neural-network-models/[Early stoppingに関して]
 - link:https://www.cs.ubc.ca/~lowe/papers/iccv99.pdf[SIFT原著論文]
 
 <<<
